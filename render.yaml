@@ -1,0 +1,29 @@
+# Render Deployment Blueprint
+services:
+  - type: web
+    name: banco-manco-alpha-build
+    env: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: node dist/index.js
+    
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 4021
+      - key: NETWORK
+        value: eip155:84532
+        
+      - key: PAY_TO_ADDRESS
+        sync: false
+      - key: SECONDARY_PAY_TO_ADDRESS
+        sync: false
+      - key: X402_FACILITATOR_URL
+        value: https://facilitator.x402.network
+      - key: LOOMAL_API_KEY
+        sync: false
+      - key: SERVICE_BASE_URL
+        sync: false
+      - key: SUPPORTED_ALT_COINS
+        value: EURC,DEGEN,WETH

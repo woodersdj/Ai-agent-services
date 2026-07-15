@@ -12,7 +12,9 @@ const EnvSchema = z.object({
   SERVICE_BASE_URL: z
     .string()
     .url("SERVICE_BASE_URL must be a valid URL"),
-  LOOMAL_API_KEY: z.string().min(1, "LOOMAL_API_KEY is required"),
+  LOOMAL_API_KEY: z.string().optional(),
+  LOOMAL_API_KEY_STAGING: z.string().optional(),
+  LOOMAL_API_KEY_PROD: z.string().optional(),
   NETWORK: z.string().optional().default("eip155:84532"),
   NODE_ENV: z.string().optional().default("development")
 });
@@ -21,7 +23,21 @@ export type Env = z.infer<typeof EnvSchema>;
 
 export function loadEnv(): Env {
   try {
-    return EnvSchema.parse(process.env);
+    const parsed = EnvSchema.parse(process.env);
+
+    // At runtime, ensure at least one Loomal key is available when not running in test mode
+    const hasLoomalKey = !!(
+      parsed.LOOMAL_API_KEY || parsed.LOOMAL_API_KEY_STAGING || parsed.LOOMAL_API_KEY_PROD
+    );
+
+    if (!hasLoomalKey && parsed.NODE_ENV !== "test") {
+      console.warn(
+        "Warning: No Loomal API key found in environment. For CI dry-runs set LOOMAL_API_KEY_STAGING or LOOMAL_API_KEY."
+      );
+      // Do not exit here; individual scripts will enforce presence of a key when required.
+    }
+
+    return parsed;
   } catch (err) {
     if (err instanceof Error) {
       console.error("Environment validation failed:");
